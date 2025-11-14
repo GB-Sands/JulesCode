@@ -1,25 +1,25 @@
-# TDMS to BioSignalML Converter
+# TDMS to BioSignalML HDF5 Converter
 
-This script converts data from a TDMS file to the BioSignalML format.
+This script converts data from a TDMS file to the BioSignalML HDF5 format.
 
 ## Installation
 
 First, install the required Python libraries:
 
 ```
-pip install nptdms lxml git+https://github.com/BioSignalML/biosignalml-python.git
+pip install nptdms lxml h5py git+https://github.com/BioSignalML/biosignalml-python.git
 ```
 
 ## Usage
 
 ```
-python tdms_to_biosignalml.py <input_file> <output_file> [options]
+python -m tdms_to_biosignalml.tdms_to_biosignalml <input_file> <output_file> [options]
 ```
 
 ### Arguments
 
 *   `input_file`: The input TDMS file.
-*   `output_file`: The output BioSignalML file.
+*   `output_file`: The output BioSignalML HDF5 file.
 
 ### Options
 
@@ -30,20 +30,20 @@ python tdms_to_biosignalml.py <input_file> <output_file> [options]
 
 ## Example
 
-To convert all channels in `TestData.tdms` to `output.bsml`:
+To convert all channels in `TestData.tdms` to `TestData.h5`:
 
 ```
-python tdms_to_biosignalml.py TestData.tdms output.bsml
+python -m tdms_to_biosignalml.tdms_to_biosignalml tdms_to_biosignalml/tests/TestData.tdms tdms_to_biosignalml/tests/TestData.h5
 ```
 
 To list all channels in `TestData.tdms`:
 
 ```
-python tdms_to_biosignalml.py TestData.tdms --list
+python -m tdms_to_biosignalml.tdms_to_biosignalml tdms_to_biosignalml/tests/TestData.tdms --list
 ```
 
 To convert only the `Devices/ECG` channel:
 
 ```
-python tdms_to_biosignalml.py TestData.tdms output.bsml --data Devices/ECG
+python -m tdms_to_biosignalml.tdms_to_biosignalml tdms_to_biosignalml/tests/TestData.tdms tdms_to_biosignalml/tests/TestData.h5 --data Devices/ECG
 ```

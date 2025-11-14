@@ -2,16 +2,14 @@
 
 import argparse
 from nptdms import TdmsFile
-import biosignalml.model as v1
-import biosignalml.rdf as rdf
-from biosignalml.model.ontology import BSML
+from biosignalml.formats.hdf5.h5recording import H5Recording
 import numpy as np
 import os
 
 def main():
-    parser = argparse.ArgumentParser(description='Convert a TDMS file to BioSignalML.')
+    parser = argparse.ArgumentParser(description='Convert a TDMS file to BioSignalML HDF5.')
     parser.add_argument('input_file', help='The input TDMS file.')
-    parser.add_argument('output_file', nargs='?', help='The output BioSignalML file.')
+    parser.add_argument('output_file', help='The output BioSignalML HDF5 file.')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output.')
     parser.add_argument('--list', action='store_true', help='List all potential groups/channels in the TDMS file.')
     parser.add_argument('--dry-run', action='store_true', help='Describe what would be executed without doing it.')
@@ -26,29 +24,25 @@ def main():
                     print(f"{group.name}/{channel.name}")
         return
 
-    if not args.output_file:
-        parser.error("the following arguments are required: output_file")
-
     if args.dry_run:
         print("Dry run enabled. The following actions would be taken:")
         print(f"1. Read the TDMS file: {args.input_file}")
-        print(f"2. Create a new BioSignalML recording.")
+        print(f"2. Create a new BioSignalML HDF5 file.")
         if args.data:
             print("3. Convert the following channels:")
             for item in args.data:
                 print(f"   - {item}")
         else:
             print("3. Convert all channels in the TDMS file.")
-        print(f"4. Write the BioSignalML recording to: {args.output_file}")
+        print(f"4. Write the BioSignalML HDF5 file to: {args.output_file}")
         return
 
+    uri = "file://" + os.path.abspath(args.output_file)
     with TdmsFile.open(args.input_file) as tdms_file:
         if args.verbose:
             print(f"Reading TDMS file: {args.input_file}")
 
-        uri = "file://" + os.path.abspath(args.output_file)
-        recording = v1.Recording(uri)
-        signals = []
+        h5_recording = H5Recording.create(uri, args.output_file, replace=True)
 
         data_to_convert = args.data
         if not data_to_convert:
@@ -63,27 +57,16 @@ def main():
             if args.verbose:
                 print(f"Converting channel: {item}")
 
-            # Create a signal
             signal_uri = f"{uri}/signal/{group_name}/{channel_name}"
-            signal = recording.new_signal(signal_uri,
-                                          units=channel.properties.get('unit_string', 'V'))
 
-            # Add data to the signal
-            signal.data = channel[:]
+            h5_recording.create_signal(
+                signal_uri,
+                units=channel.properties.get('unit_string', 'V'),
+                data=channel[:],
+                rate=1.0 / channel.properties.get('wf_increment')
+            )
 
-            # Add signal to the list
-            signals.append(signal)
-
-    if args.verbose:
-        print(f"Writing BioSignalML file to: {args.output_file}")
-
-    graph = rdf.Graph(uri)
-    graph.add_statements(recording.metadata_as_stream())
-    for signal in signals:
-        graph.add_statements(signal.metadata_as_stream())
-
-    with open(args.output_file, 'wb') as f:
-        f.write(graph.serialise(format=rdf.Format.TURTLE))
+    h5_recording.close()
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,6 @@
 # Issues with the biosignalml Library
 
-This document summarizes the issues encountered while using the `biosignalml` library to convert TDMS files to BioSignalML.
+This document summarizes the issues encountered while using the `biosignalml` library to convert TDMS files to BioSignalML HDF5.
 
 ## 1. Installation
 
@@ -12,14 +12,11 @@ pip install git+https://github.com/BioSignalML/biosignalml-python.git
 
 ## 2. Lack of Documentation
 
-The `biosignalml` library lacks clear documentation and examples. This made it difficult to understand the library's API and how to perform basic tasks such as reading and writing BioSignalML files.
+The `biosignalml` library lacks clear documentation and examples. This made it difficult to understand the library's API and how to perform basic tasks such as reading and writing BioSignalML HDF5 files.
 
 ## 3. Confusing API
 
 The API of the `biosignalml` library is not always intuitive. The following issues were encountered:
 
-*   **No dedicated reader/writer classes:** There are no `BioSignalMLReader` or `BioSignalMLWriter` classes. Instead, it is necessary to work with `biosignalml.rdf.Graph` objects directly.
-*   **Adding data to signals and recordings:** To add data to a `Signal` object, you must set the `data` attribute directly. Similarly, to add signals to a `Recording` object, you must set the `signals` attribute. There are no `append` methods.
-*   **RDF handling:** To create a BioSignalML file, you must create an `rdf.Graph` object and then add the recording and signals to it. This is not clearly documented.
-*   **`recording.signals` is a method:** The `signals` attribute of a `Recording` object is a method, not a property. This is not immediately obvious.
-*   **Loading signals from a graph:** When creating a `Recording` object from a graph, you must explicitly pass `signals=True` to the `create_from_graph` method to load the signals.
+*   **HDF5 file creation:** The `H5Recording.create` method requires a URI as the first argument, which is not clearly documented.
+*   **Error handling:** The `biosignalml` library has a bug in the `create_from_graph` method of the `Recording` class that causes a `TypeError` when trying to read a BioSignalML HDF5 file. This was worked around by querying the graph directly for the signals.
